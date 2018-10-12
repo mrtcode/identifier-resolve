@@ -3,16 +3,18 @@ Transform: 'AWS::Serverless-2016-10-31'
 Description: >-
   Lambda-based identifier resolver ({{ node_env }})
 Resources:
-  # Lambda function
-  Lambda:
+  Proxy:
     Type: 'AWS::Serverless::Function'
     Properties:
-      FunctionName: {{ function_name }}
+      FunctionName: {{ function_proxy }}
       CodeUri: ./
-      Handler: lambda.handler
+      Handler: lambda-proxy.handler
       Runtime: nodejs8.10
       MemorySize: 128
       Timeout: 30
+      Policies:
+        - LambdaInvokePolicy:
+           FunctionName: {{ function_main }}
       Events:
         # API Gateway
         API:
@@ -23,7 +25,20 @@ Resources:
       Environment:
         Variables:
           NODE_ENV: {{ node_env }}
-          ES_HOSTS: {{ es_hosts }}
+          FUNCTION_MAIN: {{ function_main }}
+  Main:
+      Type: 'AWS::Serverless::Function'
+      Properties:
+        FunctionName: {{ function_main }}
+        CodeUri: ./
+        Handler: lambda-main.handler
+        Runtime: nodejs8.10
+        MemorySize: 128
+        Timeout: 30
+        Environment:
+          Variables:
+            NODE_ENV: {{ node_env }}
+            ES_HOSTS: {{ es_hosts }}
 Outputs:
   API:
     Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/resolve"

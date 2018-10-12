@@ -14,7 +14,8 @@ rm -rf package
 mkdir package
 
 cp -r node_modules package/
-cp -r lambda.js package/
+cp -r lambda-proxy.js package/
+cp -r lambda-main.js package/
 cp -r resolve.js package/
 
 j2 "$dir/lambda_template.yaml.j2" > "$dir/package/template.yaml"
