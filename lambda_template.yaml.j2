@@ -27,18 +27,45 @@ Resources:
           NODE_ENV: {{ node_env }}
           FUNCTION_MAIN: {{ function_main }}
   Main:
-      Type: 'AWS::Serverless::Function'
-      Properties:
-        FunctionName: {{ function_main }}
-        CodeUri: ./
-        Handler: lambda-main.handler
-        Runtime: nodejs8.10
-        MemorySize: 128
-        Timeout: 30
-        Environment:
-          Variables:
-            NODE_ENV: {{ node_env }}
-            ES_HOSTS: {{ es_hosts }}
-Outputs:
-  API:
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/resolve"
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName: {{ function_main }}
+      CodeUri: ./
+      Handler: lambda-main.handler
+      Runtime: nodejs8.10
+      MemorySize: 128
+      Timeout: 30
+      Policies:
+        - VPCAccessPolicy: {}
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref LambdaSecurityGroup
+        SubnetIds: {{ subnet_ids }}
+      Environment:
+        Variables:
+          NODE_ENV: {{ node_env }}
+          ES_HOSTS: {{ es_hosts }}
+  LambdaSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: {{ security_group_name }}
+      GroupDescription: Lambda to find identifiers from metadata
+      VpcId: {{ vpc_id }}
+  LoadBalancerSecurityGroupIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      Description: identifier-search Lambda ({{ node_env }})
+      GroupId: {{ lb_security_group_id }}
+      IpProtocol: tcp
+      FromPort: {{ lb_port }}
+      ToPort: {{ lb_port }}
+      SourceSecurityGroupId: !Ref LambdaSecurityGroup
+  ElasticsearchSecurityGroupIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      Description: identifier-search Lambda ({{ node_env }})
+      GroupId: {{ es_security_group_id }}
+      IpProtocol: tcp
+      FromPort: {{ es_port }}
+      ToPort: {{ es_port }}
+      SourceSecurityGroupId: {{ lb_security_group_id }}
