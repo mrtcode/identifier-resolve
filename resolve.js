@@ -28,7 +28,7 @@ const levenshtein = require('fast-levenshtein');
 const he = require('he');
 
 module.exports = async function (client, metadata) {
-	if (!metadata.title) return {};
+	if (!metadata.title) return [];
 	
 	let title = metadata.title;
 	title = he.decode(title);
@@ -96,17 +96,17 @@ module.exports = async function (client, metadata) {
 		}
 		else if (item.seqLen <= 35) {
 			if (item.namesLen >= 2 && item.year === year) {
-				return {DOI: item.DOI};
+				return [{DOI: item.DOI}];
 			}
 		}
 		else if (item.seqLen <= 45) {
 			if (item.namesLen >= 1 && item.year === year || item.namesLen >= 2) {
-				return {DOI: item.DOI};
+				return [{DOI: item.DOI}];
 			}
 		}
 		else if (item.seqLen) {
 			if (item.namesLen >= 1 || item.year === year) {
-				return {DOI: item.DOI};
+				return [{DOI: item.DOI}];
 			}
 		}
 	}
@@ -116,16 +116,16 @@ module.exports = async function (client, metadata) {
 			if (item.namesLen > maxNamesLen) maxNamesLen = item.namesLen;
 			items = items.filter(x => x.namesLen === maxNamesLen);
 			if (items.length === 1) {
-				return {DOI: items[0].DOI}
+				return [{DOI: items[0].DOI}];
 			}
 			else if (items.length <= 5 && maxNamesLen >= 1) {
 				items.sort((a, b) => b.count - a.count);
-				return {DOI: items[0].DOI}
+				return [{DOI: items[0].DOI}]
 			}
 		}
 	}
 	
-	return {};
+	return [];
 };
 
 function normalize(text) {
